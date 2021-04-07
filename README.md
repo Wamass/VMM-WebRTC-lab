@@ -18,7 +18,7 @@ The call button ask the user for a room name, shows the local video as preview a
 
 The signaling flow between the two peers and the server is shown below.
 
-<img src="images/callflow.png" height="700px">
+<img src="images/callflow.png" height="900px">
 
 1. Both peers request the web site from the server. The web site consists of the page `static/index.html` and the Javascript implementation `static/webrtcclient.js`.
 1. Both peers establish a SocketIO connection with the server. 
