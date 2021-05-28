@@ -61,7 +61,7 @@ async function enable_camera() {
 function create_signaling_connection() {
   // *** TODO ***: create a socket by simply calling the io() function
   //               provided by the socket.io library (included in index.html).
-  // var socket = ...
+   var socket = io();
   return socket;
 }
 
@@ -73,16 +73,39 @@ function add_signaling_handlers(socket) {
   // *** TODO ***: use the 'socket.on' method to create handlers for the 
   //               messages 'created', 'joined', 'full'.
   //               For all three messages, simply write a console log.
-
+  socket.on('created', (data) => {
+    console.log(data);
+  });
+  socket.on('joined', (data) => {
+    console.log(data);
+  });
+  socket.on('full', (data) => {
+    console.log(data);
+  });
 
   // Event handlers for call establishment signaling messages
   // --------------------------------------------------------
   // *** TODO ***: use the 'socket.on' method to create signaling message handlers:
   // new_peer --> handle_new_peer
+  socket.on('new_peer', (_room) => {
+    handle_new_peer(_room);
+  });
   // invite --> handle_invite
+  socket.on('invite', (_offer) => {
+    handle_invite(_offer);
+  });
   // ok --> handle_ok
+  socket.on('invite', (_answer) => {
+    handle_ok(_answer);
+  });
   // ice_candidate --> handle_remote_icecandidate
+  socket.on('ice_candidate', (_candidate) => {
+    handle_remote_icecandidate(_candidate);
+  });
   // bye --> hangUp
+  socket.on('bye', () => {
+    hangUp();
+  });
 
 }
 
@@ -93,7 +116,7 @@ function call_room(socket) {
   if (room != '') {
       console.log('Joining room: ' + room);
       // *** TODO ***: send a join message to the server with room as argument.
-
+      socket.emit('join',room);
   }
 }
 
@@ -107,10 +130,21 @@ function create_peerconnection(localStream) {
   const pcConfiguration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
 
   // *** TODO ***: create a new RTCPeerConnection with this configuration
-  //var pc = ...
+  var pc = new RTCPeerConnection([pcConfiguration]);
 
   // *** TODO ***: add all tracks of the local stream to the peerConnection
+  localStream.getTracks().forEach(track => {
+    pc.addTrack(track, localStream);
+  });
+  /*
+  const remoteStream = MediaStream();
+  const remoteVideo = document.querySelector('#remoteVideo');
+  remoteVideo.srcObject = remoteStream;
 
+  pc.addEventListener('track', async (event) => {
+      remoteStream.addTrack(event.track, remoteStream);
+  });
+*/
   return pc;
 }
 
@@ -120,9 +154,13 @@ function create_peerconnection(localStream) {
 function add_peerconnection_handlers(peerConnection) {
 
   // *** TODO ***: add event handlers on the peerConnection
+  //src :https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/onicecandidate
   // onicecandidate -> handle_local_icecandidate
+  peerConnection.onicecandidate=handle_local_icecandidate;
   // ontrack -> handle_remote_track
+  peerConnection.ontrack=handle_remote_track;
   // ondatachannel -> handle_remote_datachannel
+  peerConnection.ondatachannel=handle_remote_datachannel;
 }
 
 // ==========================================================================
