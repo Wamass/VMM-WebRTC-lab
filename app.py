@@ -63,7 +63,7 @@ def handle_join(room_name):
 def handle_p2pmessage(msg_type, content):
     # *** TODO ***: Get the user_id from the request variable (see handle_join)
     user_id = request.sid
-    room_name = rooms_db.get(user_id)
+    room_name = rooms_db[user_id]
     # *** TODO ***: Get the room_name of the user from rooms_db
     print(f"Received {msg_type} message: {content} from user: {user_id} in room {room_name}")
 

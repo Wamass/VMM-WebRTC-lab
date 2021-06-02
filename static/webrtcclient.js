@@ -130,7 +130,7 @@ function create_peerconnection(localStream) {
   const pcConfiguration = {'iceServers': [{'urls': 'stun:stun.l.google.com:19302'}]}
 
   // *** TODO ***: create a new RTCPeerConnection with this configuration
-  var pc = new RTCPeerConnection([pcConfiguration]);
+  var pc = new RTCPeerConnection(pcConfiguration);
 
   // *** TODO ***: add all tracks of the local stream to the peerConnection
   localStream.getTracks().forEach(track => {
@@ -175,6 +175,8 @@ async function handle_new_peer(room){
   create_datachannel(peerConnection); // MUST BE CALLED BEFORE createOffer
 
   // *** TODO ***: use createOffer (with await) generate an SDP offer for peerConnection
+  const offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
   // *** TODO ***: use setLocalDescription (with await) to add the offer to peerConnection
   // *** TODO ***: send an 'invite' message with the offer to the peer.
   socket.emit('invite', offer); 
@@ -186,8 +188,11 @@ async function handle_new_peer(room){
 async function handle_invite(offer) {
   console.log('Received Invite offer from Caller: ', offer);
   // *** TODO ***: use setRemoteDescription (with await) to add the offer SDP to peerConnection 
+  await peerConnection.setRemoteDescription(offer);
   // *** TODO ***: use createAnswer (with await) to generate an answer SDP
+  var answer = await peerConnection.createAnswer();
   // *** TODO ***: use setLocalDescription (with await) to add the answer SDP to peerConnection
+  await peerConnection.setLocalDescription(answer);
   // *** TODO ***: send an 'ok' message with the answer to the peer.
   socket.emit('ok', answer); 
 }
@@ -199,6 +204,7 @@ async function handle_ok(answer) {
   console.log('Received OK answer from Callee: ', answer);
   // *** TODO ***: use setRemoteDescription (with await) to add the answer SDP 
   //               the peerConnection
+  await peerConnection.setRemoteDescription(answer);
 }
 
 // ==========================================================================
@@ -212,6 +218,9 @@ async function handle_local_icecandidate(event) {
   console.log('Received local ICE candidate: ', event);
   // *** TODO ***: check if there is a new ICE candidate.
   // *** TODO ***: if yes, send a 'ice_candidate' message with the candidate to the peer
+  if (event.candidate) {
+    socket.emit('ice_candidate',event.candidate);
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -219,7 +228,7 @@ async function handle_local_icecandidate(event) {
 async function handle_remote_icecandidate(candidate) {
   console.log('Received remote ICE candidate: ', candidate);
   // *** TODO ***: add the received remote ICE candidate to the peerConnection 
-
+ peerConnection.addIceCandidate(candidate);
 }
 
 // ==========================================================================
@@ -232,7 +241,7 @@ async function handle_remote_icecandidate(candidate) {
 function handle_remote_track(event) {
   console.log('Received remote track: ', event);
   // *** TODO ***: get the first stream of the event and show it in remoteVideo
-  //document.getElementById('remoteVideo').srcObject = ...
+  document.getElementById('remoteVideo').srcObject = event.streams[0];
 }
 
 // ==========================================================================
